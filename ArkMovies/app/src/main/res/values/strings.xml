@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">Ark Movies</string>
+    <string name="image_base_url">http://image.tmdb.org/t/p/w185</string>
+    <string name="base_url">http://api.themoviedb.org/3/movie/</string>
+    <string name="popularSort">popular</string>
+    <string name="topRatedSort">top_rated</string>
+    <string name="api_key_param">api_key</string>
+    <string name="banner_url">http://image.tmdb.org/t/p/w342</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="loadingMsg">Please wait</string>
+    <string name="menu_popular">Popular movies</string>
+    <string name="menu_top_rated">Top rated movies</string>
+    <string name="youTube_base_url">https://www.youtube.com/watch?v=</string>
+    <string name="youTube_image_url">https://img.youtube.com/vi/</string>
+    <string name="youTube_image_quality">/mqdefault.jpg</string>
+    <string name="shareTrailer">Share Trailer</string>
+    <string name="trailerUrl">/videos</string>
+    <string name="reviewsUrl">/reviews</string>
+    <string name="show_more">ShowMore</string>
+    <string name="show_less">ShowLess</string>
+    <string name="favMovies">Favourate movies</string>
+</resources>
