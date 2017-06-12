@@ -1,7 +1,6 @@
 package com.ark.movieapp.presenters.presenterImp;
 
 import android.content.res.Configuration;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v7.widget.CardView;
@@ -13,25 +12,32 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
+import com.ark.android.rxbinding.rxuil.RxUILObservableBuilder;
+import com.ark.android.rxbinding.rxuil.UILConsumer;
+import com.ark.movieapp.R;
 import com.ark.movieapp.app.MovieAppApplicationClass;
 import com.ark.movieapp.data.exception.AppException;
 import com.ark.movieapp.data.model.Movie;
-import com.ark.movieapp.R;
+import com.ark.movieapp.idleresources.SimpleIdlingResource;
 import com.ark.movieapp.managers.FavManager;
-import com.ark.movieapp.ui.adapter.ListAdapterRecycle;
-import com.ark.movieapp.ui.views.MoviesViewHolder;
 import com.ark.movieapp.managers.MovieManager;
 import com.ark.movieapp.presenters.presenterInterfaces.MVPInterface;
+import com.ark.movieapp.ui.adapter.ListAdapterRecycle;
+import com.ark.movieapp.ui.views.MoviesViewHolder;
 import com.ark.movieapp.utils.DisplayUtils;
+import com.ark.movieapp.utils.InjectorHelper;
+import com.jakewharton.rxbinding2.view.RxView;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
-import com.nostra13.universalimageloader.core.assist.FailReason;
-import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
+ *
  * Created by ahmedb on 11/26/16.
  */
 
@@ -45,11 +51,21 @@ public class ListFragmentPresenter implements MVPInterface.PresenterInterface {
     private List<Movie> movies;
     private boolean scrollingDown;
 
-    HashMap<Integer, Boolean> itemsScrolled = new HashMap<>();
+    private HashMap<Integer, Boolean> itemsScrolled = new HashMap<>();
     private ListAdapterRecycle adapterRecycle;
+
+    @Inject
+    ImageLoader imageLoader;
+    @Inject
+    DisplayImageOptions displayImageOptions;
+    @Inject
+    MovieAppApplicationClass applicationClass;
+    private SimpleIdlingResource simpleIdlingResource;
 
     public ListFragmentPresenter(MVPInterface.ViewInterface view) {
         this.mView = view;
+        InjectorHelper.getInstance().getDeps().inject(this);
+        simpleIdlingResource = applicationClass.mIdlingResource;
     }
 
     private void initAnimationsItems() {
@@ -62,6 +78,8 @@ public class ListFragmentPresenter implements MVPInterface.PresenterInterface {
     @Override
     public void getMovies(boolean userSelection) {
         mView.showLoading();
+        if(simpleIdlingResource != null)
+            simpleIdlingResource.setIdleState(false);
         MovieManager.getInstance().getMovies(this, userSelection);
     }
 
@@ -103,15 +121,8 @@ public class ListFragmentPresenter implements MVPInterface.PresenterInterface {
 
         holder.flickerImageContainer.setLayoutParams(params);
 
-
-        ((CardView) holder.flickerImageContainer.getParent()).setOnClickListener(new View.OnClickListener() {
-
-
-            @Override
-            public void onClick(View view) {
-
-                openDetailsAtIndex(position);
-            }
+        RxView.clicks((CardView) holder.flickerImageContainer.getParent()).subscribe(o -> {
+            openDetailsAtIndex(position);
         });
 
         if (FavManager.getInstance().isFav(movies.get(position).getId())) {
@@ -121,38 +132,37 @@ public class ListFragmentPresenter implements MVPInterface.PresenterInterface {
             movies.get(position).setFav(false);
             holder.favBtn.setImageResource(R.drawable.rating_star);
         }
-        holder.favBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
 
-                if (movies.get(position).isFav()) {
-                    holder.favBtn.setImageResource(R.drawable.rating_star);
-                    movies.get(position).setFav(false);
-                    FavManager.getInstance().changeFav(movies.get(position));
+        RxView.clicks(holder.favBtn).subscribe(o -> {
+            if (movies.get(position).isFav()) {
+                holder.favBtn.setImageResource(R.drawable.rating_star);
+                movies.get(position).setFav(false);
+                FavManager.getInstance().changeFav(movies.get(position));
 
-                } else {
+            } else {
 
-                    holder.favBtn.setImageResource(R.drawable.rating_star_sc);
-                    movies.get(position).setFav(true);
-                    FavManager.getInstance().changeFav(movies.get(position));
-                }
+                holder.favBtn.setImageResource(R.drawable.rating_star_sc);
+                movies.get(position).setFav(true);
+                FavManager.getInstance().changeFav(movies.get(position));
             }
         });
 
-        MovieAppApplicationClass.getInstance().getImageLoader().displayImage(movies.get(position).getPosterURL() , holder.flickerImageView , MovieAppApplicationClass.getInstance().getDisplayOptions(),new SimpleImageLoadingListener(){
+        RxUILObservableBuilder.builder().preview(holder.flickerImageView)
+                .url(movies.get(position).getPosterURL())
+                .imageLoader(imageLoader)
+                .displayOptions(displayImageOptions)
+                .subscribe(new UILConsumer() {
 
-            @Override
-            public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
-                super.onLoadingComplete(imageUri, view, loadedImage);
-                holder.progressBar.setVisibility(View.GONE);
-            }
+                    @Override
+                    public void onNext(RxUILObservableBuilder.RXUILObject value) {
+                        holder.progressBar.setVisibility(View.GONE);
+                    }
 
-            @Override
-            public void onLoadingFailed(String imageUri, View view, FailReason failReason) {
-                super.onLoadingFailed(imageUri, view, failReason);
-                holder.progressBar.setVisibility(View.GONE);
-            }
-        });
+                    @Override
+                    public void onError(Throwable e) {
+                        holder.progressBar.setVisibility(View.GONE);
+                    }
+                });
     }
 
     private void openDetailsAtIndex(int index) {
@@ -168,27 +178,23 @@ public class ListFragmentPresenter implements MVPInterface.PresenterInterface {
     public void OnSuccess(final List<Movie> movies) {
 
         this.movies = movies;
-        MovieAppApplicationClass.getInstance().runOnUI(new Runnable() {
-            @Override
-            public void run() {
+        mView.hideProgress();
+        if (movies == null || movies.isEmpty())
+            onFail(new AppException(AppException.NO_DATA_EXCEPTION));
+        else {
+            mView.hideErrorMsg();
+            initAnimationsItems();
+            setListAdapter();
+        }
 
-                mView.hideProgress();
-                if (movies == null || movies.isEmpty())
-                    onFail(new AppException(AppException.NO_DATA_EXCEPTION));
-                else {
-                    mView.hideErrorMsg();
-                    initAnimationsItems();
-                    setListAdapter();
-                }
-            }
-        });
-
-        if (mView.isTabMode()) {
-            if(FavManager.getInstance().isFav(movies.get(0).getId())){
+        if (mView.isTabMode() && movies != null && !movies.isEmpty()) {
+            if (FavManager.getInstance().isFav(movies.get(0).getId())) {
                 movies.get(0).setFav(true);
             }
             openDetailsAtIndex(0);
         }
+        if(simpleIdlingResource != null)
+            simpleIdlingResource.setIdleState(true);
     }
 
     private void setListAdapter() {
@@ -200,20 +206,15 @@ public class ListFragmentPresenter implements MVPInterface.PresenterInterface {
                 super.onScrolled(recyclerView, dx, dy);
             }
         });
-        mView.getMoviesList().setLayoutManager(new GridLayoutManager(MovieAppApplicationClass.getInstance().getApplicationContext(), (int) mView.getContext().getResources().getInteger(R.integer.numberOfColumns)));
+        mView.getMoviesList().setLayoutManager(new GridLayoutManager(applicationClass.getApplicationContext(), (int) mView.getContext().getResources().getInteger(R.integer.numberOfColumns)));
         mView.getMoviesList().setAdapter(adapterRecycle);
     }
 
     @Override
     public void onFail(final AppException e) {
 
-        MovieAppApplicationClass.getInstance().runOnUI(new Runnable() {
-            @Override
-            public void run() {
-                mView.hideProgress();
-                mView.showErrorMsg(e.getMessage());
-            }
-        });
+        mView.hideProgress();
+        mView.showErrorMsg(e.getMessage());
     }
 
     @Override

@@ -25,21 +25,13 @@ import rx.schedulers.Schedulers;
  */
 public class NetworkDispatcher {
 
-    private static final OkHttpClient okHttpClient = new OkHttpClient.Builder()
-            .readTimeout(30, TimeUnit.SECONDS)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30 , TimeUnit.SECONDS)
-            .build();
+    private final Retrofit retrofit;
 
-    private static Retrofit retrofit = new Retrofit.Builder()
-            .baseUrl(MovieAppApplicationClass.getInstance().getString(R.string.base_url))
-            .addConverterFactory(GsonConverterFactory.create())
-            .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-            .client(okHttpClient)
-            .build();
+    public NetworkDispatcher(Retrofit retrofit){
+        this.retrofit = retrofit;
+    }
 
-
-    public static void dispatchRequest(Map<String, String> param , String url , Observer<JsonElement> callBack){
+    public void dispatchRequest(Map<String, String> param , String url , Observer<JsonElement> callBack){
 
         ApiEndpointInterface apiService =
                 retrofit.create(ApiEndpointInterface.class);

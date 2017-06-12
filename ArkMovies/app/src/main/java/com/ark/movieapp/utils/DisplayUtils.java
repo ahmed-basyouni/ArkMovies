@@ -6,6 +6,8 @@ import android.view.WindowManager;
 
 import com.ark.movieapp.app.MovieAppApplicationClass;
 
+import javax.inject.Inject;
+
 /**
  * a class that is used to get screen dimensions at runtime
  * Created by ahmedb on 11/26/16.
@@ -14,9 +16,12 @@ import com.ark.movieapp.app.MovieAppApplicationClass;
 public class DisplayUtils {
 
     private Display display;
+    @Inject
+    MovieAppApplicationClass applicationClass;
 
     public DisplayUtils(){
-        WindowManager wm = (WindowManager) MovieAppApplicationClass.getInstance().getSystemService(Context.WINDOW_SERVICE);
+        InjectorHelper.getInstance().getDeps().inject(this);
+        WindowManager wm = (WindowManager) applicationClass.getSystemService(Context.WINDOW_SERVICE);
         display = wm.getDefaultDisplay();
     }
 

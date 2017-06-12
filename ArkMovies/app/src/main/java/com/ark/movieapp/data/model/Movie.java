@@ -44,7 +44,7 @@ public class Movie extends BaseEntity implements Parcelable{
 
     }
 
-    public Movie(Parcel in) {
+    private Movie(Parcel in) {
         title = in.readString();
         posterURL = in.readString();
         overView = in.readString();

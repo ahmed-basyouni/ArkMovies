@@ -36,7 +36,7 @@ public class MovieContentProvider extends ContentProvider {
     private static final int MOVIES = 10;
     private static final int MOVIE_ID = 20;
 
-    private static final String AUTHORITY = "com.ark.movieapp.contentprovider";
+    public static final String AUTHORITY = "com.ark.movieapp.contentprovider";
 
     private static final String BASE_PATH = "movies";
 

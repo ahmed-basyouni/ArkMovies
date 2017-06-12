@@ -28,6 +28,7 @@ import com.ark.movieapp.data.model.Movie;
 import com.ark.movieapp.presenters.presenterImp.DetailsScreenPresenterImp;
 import com.ark.movieapp.presenters.presenterInterfaces.DetailsScreenPresenterInterface;
 import com.ark.movieapp.ui.activity.HomeActivity;
+import com.jakewharton.rxbinding2.support.v7.widget.RxToolbar;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -88,11 +89,8 @@ public class DetailsFragment extends Fragment implements DetailsScreenPresenterI
 
             ((AppCompatActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-            toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    getActivity().getSupportFragmentManager().popBackStack();
-                }
+            RxToolbar.navigationClicks(toolbar).subscribe(o -> {
+                getActivity().getSupportFragmentManager().popBackStack();
             });
 
         }else{

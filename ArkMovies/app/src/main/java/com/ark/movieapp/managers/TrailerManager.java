@@ -7,10 +7,13 @@ import com.ark.movieapp.data.exception.AppException;
 import com.ark.movieapp.data.model.TrailerResultModel;
 import com.ark.movieapp.data.network.NetworkListener;
 import com.ark.movieapp.presenters.presenterInterfaces.TrailerPresenterInterface;
+import com.ark.movieapp.utils.InjectorHelper;
 import com.ark.movieapp.utils.NetworkUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 /**
  * Created by ahmedb on 12/12/16.
@@ -22,13 +25,17 @@ public class TrailerManager extends BaseManager implements TrailerPresenterInter
     private static TrailerManager instance;
     private TrailerPresenterInterface.PresenterInterface mPresenter;
 
+    @Inject
+    MovieAppApplicationClass applicationClass;
+
     public TrailerManager() {
         super(TrailerResultModel.class);
+        InjectorHelper.getInstance().getDeps().inject(this);
     }
 
-    public static TrailerManager getInstance(){
+    public static TrailerManager getInstance() {
 
-        if(instance == null)
+        if (instance == null)
             instance = new TrailerManager();
         return instance;
     }
@@ -37,29 +44,20 @@ public class TrailerManager extends BaseManager implements TrailerPresenterInter
     public void getMovieTrailer(int id, TrailerPresenterInterface.PresenterInterface presenterInterface) {
         this.mPresenter = presenterInterface;
 
-        if(NetworkUtils.isNetworkConnected()) {
+        if (NetworkUtils.isNetworkConnected()) {
 
             getTrailersFromServer(id);
 
-        }else{
+        } else {
 
             mPresenter.onFail(new AppException(AppException.NETWORK_EXCEPTION));
         }
     }
 
     private void getTrailersFromServer(final int id) {
-
-        MovieAppApplicationClass.getInstance().runInBackGround(new Runnable() {
-            @Override
-            public void run() {
-
-
-                Map<String, String> param = new HashMap<>();
-                param.put(MovieAppApplicationClass.getInstance().getString(R.string.api_key_param), BuildConfig.API_KEY);
-                getObject(String.valueOf(id) + MovieAppApplicationClass.getInstance().getString(R.string.trailerUrl),param,TrailerManager.this);
-
-            }
-        });
+        Map<String, String> param = new HashMap<>();
+        param.put(applicationClass.getString(R.string.api_key_param), BuildConfig.API_KEY);
+        getObject(String.valueOf(id) + applicationClass.getString(R.string.trailerUrl), param, TrailerManager.this);
     }
 
     @Override
@@ -69,7 +67,7 @@ public class TrailerManager extends BaseManager implements TrailerPresenterInter
 
     @Override
     public void onError(Throwable t) {
-        if(t instanceof Exception)
-            mPresenter.onFail(AppException.getAppException((Exception)t));
+        if (t instanceof Exception)
+            mPresenter.onFail(AppException.getAppException((Exception) t));
     }
 }

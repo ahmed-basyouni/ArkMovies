@@ -38,11 +38,8 @@ import butterknife.OnClick;
  */
 public class HomeFragment extends Fragment implements MVPInterface.ViewInterface {
 
-
-
     @BindView(R.id.movieList) RecyclerView moviesList;
     @BindView(R.id.errorMsg) TextView errorMsg;
-
 
     private ListFragmentPresenter mPresenter;
     private ProgressDialog loadingDialog;

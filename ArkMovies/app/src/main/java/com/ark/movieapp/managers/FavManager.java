@@ -13,9 +13,19 @@ import com.ark.movieapp.data.cache.MovieContentProvider;
 import com.ark.movieapp.data.cache.MovieDataBaseHelper;
 import com.ark.movieapp.data.model.Movie;
 import com.ark.movieapp.presenters.presenterInterfaces.MVPInterface;
+import com.ark.movieapp.utils.InjectorHelper;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Inject;
+
+import rx.Observable;
+import rx.Observer;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 /**
  *
@@ -26,15 +36,18 @@ public class FavManager implements Loader.OnLoadCompleteListener<Cursor>{
 
     private static FavManager instance;
 
-    private Context context = MovieAppApplicationClass.getInstance().getApplicationContext();
+    @Inject
+    MovieAppApplicationClass context;
 
     private static final int LOADER_ID = 1;
     private CursorLoader cursorLoader;
     private MVPInterface.PresenterInterface mPresenter;
 
     public static FavManager getInstance(){
-        if(instance == null)
+        if(instance == null) {
             instance = new FavManager();
+            InjectorHelper.getInstance().getDeps().inject(instance);
+        }
         return instance;
     }
 
@@ -74,32 +87,28 @@ public class FavManager implements Loader.OnLoadCompleteListener<Cursor>{
 
     public void changeFav(final Movie movieModel) {
 
-        MovieAppApplicationClass.getInstance().runInBackGround(new Runnable() {
-            @Override
-            public void run() {
+        Observable.create(subscriber -> {
+            if(movieModel.isFav()){
 
-                if(movieModel.isFav()){
+                ContentValues contentValues = getContentFromMovieModel(movieModel);
 
-                    ContentValues contentValues = getContentFromMovieModel(movieModel);
+                context.getContentResolver().insert(
+                        MovieContentProvider.CONTENT_URI, contentValues);
 
-                    context.getContentResolver().insert(
-                            MovieContentProvider.CONTENT_URI, contentValues);
+            }else{
 
-                }else{
+                Uri uri = Uri.parse(MovieContentProvider.CONTENT_URI + "/"
+                        + movieModel.getId());
 
-                    Uri uri = Uri.parse(MovieContentProvider.CONTENT_URI + "/"
-                            + movieModel.getId());
-
-                    context.getContentResolver().delete(uri, null, null);
-                }
+                context.getContentResolver().delete(uri, null, null);
             }
-        });
+        }).subscribeOn(Schedulers.io()).subscribe();
     }
 
     public void getFavList(MVPInterface.PresenterInterface presenter){
 
         this.mPresenter = presenter;
-        cursorLoader = new CursorLoader(MovieAppApplicationClass.getInstance().getApplicationContext(), MovieContentProvider.CONTENT_URI, MovieContentProvider.AVAILABLE_COLUMNS, null, null, null);
+        cursorLoader = new CursorLoader(context, MovieContentProvider.CONTENT_URI, MovieContentProvider.AVAILABLE_COLUMNS, null, null, null);
         cursorLoader.registerListener(LOADER_ID , FavManager.this);
         cursorLoader.startLoading();
     }
@@ -107,23 +116,39 @@ public class FavManager implements Loader.OnLoadCompleteListener<Cursor>{
     @Override
     public void onLoadComplete(Loader<Cursor> loader, Cursor cursor) {
 
-        List<Movie> favMovies = new ArrayList<>();
+        Observable.create((Observable.OnSubscribe<List<Movie>>) subscriber -> {
+            List<Movie> favMovies = new ArrayList<>();
+            cursor.moveToFirst();
+            while (!cursor.isAfterLast()) {
+                Movie movieModel = getMovieModelFromCursor(cursor);
+                favMovies.add(movieModel);
+                cursor.moveToNext();
+            }
+            subscriber.onNext(favMovies);
+            subscriber.onCompleted();
+        }).subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(new Observer<List<Movie>>() {
+            @Override
+            public void onCompleted() {
+                // make sure to close the cursor
+                cursor.close();
 
-        cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            Movie movieModel = getMovieModelFromCursor(cursor);
-            favMovies.add(movieModel);
-            cursor.moveToNext();
-        }
+                cursorLoader.unregisterListener(FavManager.this);
+                cursorLoader.cancelLoad();
+                cursorLoader.stopLoading();
+            }
 
-        this.mPresenter.OnSuccess(favMovies);
+            @Override
+            public void onError(Throwable e) {
 
-        // make sure to close the cursor
-        cursor.close();
+            }
 
-        cursorLoader.unregisterListener(this);
-        cursorLoader.cancelLoad();
-        cursorLoader.stopLoading();
+            @Override
+            public void onNext(List<Movie> movies) {
+                FavManager.this.mPresenter.OnSuccess(movies);
+            }
+        });
     }
 
     public boolean isFav(int id){
