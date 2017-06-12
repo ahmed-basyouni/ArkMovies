@@ -37,7 +37,7 @@ public class FavManager implements Loader.OnLoadCompleteListener<Cursor>{
     private static FavManager instance;
 
     @Inject
-    MovieAppApplicationClass context;
+    public Context context;
 
     private static final int LOADER_ID = 1;
     private CursorLoader cursorLoader;

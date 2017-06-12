@@ -38,6 +38,12 @@ public class AppModule {
         return applicationClass;
     }
 
+    @Singleton
+    @Provides
+    public Context provideContext(){
+        return applicationClass;
+    }
+
     private void initImageLoader(MovieAppApplicationClass context) {
         // This configuration tuning is custom. You can tune every option, you may tune some of them,
         // or you can create default configuration by
