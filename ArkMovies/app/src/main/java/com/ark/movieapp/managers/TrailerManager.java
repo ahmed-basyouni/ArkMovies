@@ -8,7 +8,6 @@ import com.ark.movieapp.data.model.TrailerResultModel;
 import com.ark.movieapp.data.network.NetworkListener;
 import com.ark.movieapp.presenters.presenterInterfaces.TrailerPresenterInterface;
 import com.ark.movieapp.utils.InjectorHelper;
-import com.ark.movieapp.utils.NetworkUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +43,7 @@ public class TrailerManager extends BaseManager implements TrailerPresenterInter
     public void getMovieTrailer(int id, TrailerPresenterInterface.PresenterInterface presenterInterface) {
         this.mPresenter = presenterInterface;
 
-        if (NetworkUtils.isNetworkConnected()) {
+        if (isNetworkConnected()) {
 
             getTrailersFromServer(id);
 

@@ -8,7 +8,6 @@ import com.ark.movieapp.data.model.ReviewResultModel;
 import com.ark.movieapp.data.network.NetworkListener;
 import com.ark.movieapp.presenters.presenterInterfaces.ReviewPresenterInterface;
 import com.ark.movieapp.utils.InjectorHelper;
-import com.ark.movieapp.utils.NetworkUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,7 +45,7 @@ public class ReviewManager extends BaseManager implements ReviewPresenterInterfa
 
         this.mPresenter = presenterInterface;
 
-        if (NetworkUtils.isNetworkConnected()) {
+        if (isNetworkConnected()) {
 
             getTrailersFromServer(id);
 

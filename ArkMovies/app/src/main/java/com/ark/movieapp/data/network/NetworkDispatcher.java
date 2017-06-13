@@ -31,18 +31,13 @@ public class NetworkDispatcher {
         this.retrofit = retrofit;
     }
 
-    public void dispatchRequest(Map<String, String> param , String url , Observer<JsonElement> callBack){
+    public Observable<JsonElement> dispatchRequest(Map<String, String> param , String url){
 
         ApiEndpointInterface apiService =
                 retrofit.create(ApiEndpointInterface.class);
 
 
-        Observable<JsonElement> call = apiService.HandleRequest(url, param);
-
-
-        call.subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(callBack);
+        return apiService.HandleRequest(url, param);
 
     }
 

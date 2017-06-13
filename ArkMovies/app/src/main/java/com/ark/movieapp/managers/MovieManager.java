@@ -1,7 +1,6 @@
 package com.ark.movieapp.managers;
 
 import android.content.Context;
-import android.widget.Toast;
 
 import com.ark.movieapp.app.MovieAppApplicationClass;
 import com.ark.movieapp.BuildConfig;
@@ -12,7 +11,6 @@ import com.ark.movieapp.data.cache.SharedPrefrencesDataLayer;
 import com.ark.movieapp.R;
 import com.ark.movieapp.presenters.presenterInterfaces.MVPInterface;
 import com.ark.movieapp.utils.InjectorHelper;
-import com.ark.movieapp.utils.NetworkUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,7 +51,7 @@ public class MovieManager extends BaseManager implements MVPInterface.ModelInter
 
         int type = getType();
 
-        if (NetworkUtils.isNetworkConnected()) {
+        if (isNetworkConnected()) {
 
             if (type != MVPInterface.FAV)
                 getMoviesFromServer(type, presenter);

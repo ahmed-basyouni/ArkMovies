@@ -64,13 +64,13 @@ public class HomeFragment extends Fragment implements MVPInterface.ViewInterface
 
         ButterKnife.bind(this , rootView);
 
-        getActivity().findViewById(R.id.fab).setVisibility(View.VISIBLE);
+        getmPresenter();
+
+        if(getActivity().findViewById(R.id.fab) != null)
+            getActivity().findViewById(R.id.fab).setVisibility(View.VISIBLE);
 
         loadingDialog = new ProgressDialog(getActivity());
         loadingDialog.setMessage(getString(R.string.loadingMsg));
-
-
-        mPresenter = new ListFragmentPresenter(this);
 
         if(savedInstanceState == null) {
             mPresenter.getMovies(false);
@@ -258,5 +258,15 @@ public class HomeFragment extends Fragment implements MVPInterface.ViewInterface
 
         mPresenter.scrollingUp();
         moviesList.smoothScrollToPosition(0);
+    }
+
+    public void setmPresenter(ListFragmentPresenter mPresenter) {
+        this.mPresenter = mPresenter;
+    }
+
+    public ListFragmentPresenter getmPresenter() {
+        if(mPresenter == null)
+            mPresenter = new ListFragmentPresenter(this);
+        return mPresenter;
     }
 }

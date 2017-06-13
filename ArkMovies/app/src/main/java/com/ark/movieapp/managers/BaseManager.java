@@ -1,5 +1,9 @@
 package com.ark.movieapp.managers;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+
+import com.ark.movieapp.app.MovieAppApplicationClass;
 import com.ark.movieapp.data.model.BaseEntity;
 import com.ark.movieapp.data.network.NetworkDispatcher;
 import com.ark.movieapp.data.network.NetworkListener;
@@ -9,7 +13,10 @@ import com.google.gson.JsonElement;
 
 import java.util.Map;
 
+import rx.Observable;
 import rx.Observer;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 /**
  *
@@ -29,10 +36,13 @@ public class BaseManager<T extends BaseEntity> implements Observer<JsonElement>{
         networkDispatcher = InjectorHelper.getInstance().getNetworkDispatcher();
     }
 
-    void getObject(String url , Map<String,String> param ,  NetworkListener<T> wrappedCallback){
+    public void getObject(String url , Map<String,String> param ,  NetworkListener<T> wrappedCallback){
 
         this.wrappedCallback = wrappedCallback;
-        networkDispatcher.dispatchRequest(param,url,this);
+        Observable<JsonElement> call = networkDispatcher.dispatchRequest(param,url);
+        call.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(this);
     }
 
     @Override
@@ -51,5 +61,13 @@ public class BaseManager<T extends BaseEntity> implements Observer<JsonElement>{
 
         Gson gson = new Gson();
         wrappedCallback.onSuccess(gson.fromJson(gson.toJson(model.getAsJsonObject()), mClass));
+    }
+
+    public boolean isNetworkConnected() {
+
+        ConnectivityManager cm = (ConnectivityManager) MovieAppApplicationClass.getInstance()
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        return cm.getActiveNetworkInfo() != null;
     }
 }

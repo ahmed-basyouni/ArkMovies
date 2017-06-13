@@ -3,6 +3,7 @@ package com.ark.movieapp.presenters.presenterImp;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.annotation.VisibleForTesting;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -66,6 +67,11 @@ public class ListFragmentPresenter implements MVPInterface.PresenterInterface {
         this.mView = view;
         InjectorHelper.getInstance().getDeps().inject(this);
         simpleIdlingResource = applicationClass.mIdlingResource;
+    }
+
+    @VisibleForTesting
+    public ListFragmentPresenter(){
+        InjectorHelper.getInstance().getDeps().inject(this);
     }
 
     private void initAnimationsItems() {
@@ -178,26 +184,28 @@ public class ListFragmentPresenter implements MVPInterface.PresenterInterface {
     public void OnSuccess(final List<Movie> movies) {
 
         this.movies = movies;
-        mView.hideProgress();
-        if (movies == null || movies.isEmpty())
-            onFail(new AppException(AppException.NO_DATA_EXCEPTION));
-        else {
-            mView.hideErrorMsg();
-            initAnimationsItems();
-            setListAdapter();
-        }
-
-        if (mView.isTabMode() && movies != null && !movies.isEmpty()) {
-            if (FavManager.getInstance().isFav(movies.get(0).getId())) {
-                movies.get(0).setFav(true);
+        if(mView != null) {
+            mView.hideProgress();
+            if (movies == null || movies.isEmpty())
+                onFail(new AppException(AppException.NO_DATA_EXCEPTION));
+            else {
+                mView.hideErrorMsg();
+                initAnimationsItems();
+                setListAdapter();
             }
-            openDetailsAtIndex(0);
+
+            if (mView.isTabMode() && movies != null && !movies.isEmpty()) {
+                if (FavManager.getInstance().isFav(movies.get(0).getId())) {
+                    movies.get(0).setFav(true);
+                }
+                openDetailsAtIndex(0);
+            }
         }
         if(simpleIdlingResource != null)
             simpleIdlingResource.setIdleState(true);
     }
 
-    private void setListAdapter() {
+    public void setListAdapter() {
         adapterRecycle = new ListAdapterRecycle(this);
         mView.getMoviesList().setOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -212,9 +220,10 @@ public class ListFragmentPresenter implements MVPInterface.PresenterInterface {
 
     @Override
     public void onFail(final AppException e) {
-
-        mView.hideProgress();
-        mView.showErrorMsg(e.getMessage());
+        if(mView != null) {
+            mView.hideProgress();
+            mView.showErrorMsg(e.getMessage());
+        }
     }
 
     @Override
@@ -267,5 +276,9 @@ public class ListFragmentPresenter implements MVPInterface.PresenterInterface {
     @Override
     public void scrollingUp() {
         this.scrollingDown = false;
+    }
+
+    public MVPInterface.ViewInterface getmView() {
+        return mView;
     }
 }

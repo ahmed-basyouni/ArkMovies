@@ -78,6 +78,7 @@ dependencies {
     compile 'com.ark.android:RxPalette:1.0.1'
     compile 'com.ark.android:RxUIL:1.0.2'
     compile 'com.android.support.test.espresso:espresso-idling-resource:2.2.2'
-    testCompile 'org.robolectric:robolectric:3.1.1'
+    testCompile "org.robolectric:robolectric:3.3.2"
     testCompile 'org.mockito:mockito-core:2.8.9'
+    testCompile "org.robolectric:shadows-support-v4:3.0"
 }

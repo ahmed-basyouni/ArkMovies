@@ -1,6 +1,7 @@
 package com.ark.movieapp;
 
 import android.content.ContentResolver;
+import android.content.pm.ProviderInfo;
 import android.database.Cursor;
 
 import com.ark.movieapp.data.cache.MovieContentProvider;
@@ -11,6 +12,7 @@ import com.ark.movieapp.managers.FavManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
@@ -36,9 +38,9 @@ public class ContentProviderTest {
         provider.onCreate();
         favManager = new FavManager();
         favManager.context = RuntimeEnvironment.application;
-        ShadowContentResolver.registerProvider(
-                MovieContentProvider.AUTHORITY, provider
-        );
+        ProviderInfo info = new ProviderInfo();
+        info.authority = MovieContentProvider.AUTHORITY;
+        Robolectric.buildContentProvider(MovieContentProvider.class).create(info);
         contentResolver = RuntimeEnvironment.application.getContentResolver();
     }
 
